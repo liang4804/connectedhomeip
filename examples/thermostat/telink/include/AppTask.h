@@ -32,6 +32,7 @@ private:
     friend AppTask & GetAppTask(void);
     friend class AppTaskCommon;
 
+    static void SwitchActionEventHandler(AppEvent * aEvent);
     CHIP_ERROR Init(void);
 
     static AppTask sAppTask;

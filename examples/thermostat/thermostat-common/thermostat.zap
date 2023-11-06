@@ -1,6 +1,5 @@
 {
-  "fileFormat": 2,
-  "featureLevel": 99,
+  "featureLevel": 97,
   "creator": "zap",
   "keyValuePairs": [
     {
@@ -19,24 +18,25 @@
   "package": [
     {
       "pathRelativity": "relativeToZap",
+      "path": "../../../src/app/zap-templates/app-templates.json",
+      "type": "gen-templates-json",
+      "version": "chip-v1"
+    },
+    {
+      "pathRelativity": "relativeToZap",
       "path": "../../../src/app/zap-templates/zcl/zcl.json",
       "type": "zcl-properties",
       "category": "matter",
       "version": 1,
       "description": "Matter SDK ZCL data"
-    },
-    {
-      "pathRelativity": "relativeToZap",
-      "path": "../../../src/app/zap-templates/app-templates.json",
-      "type": "gen-templates-json",
-      "version": "chip-v1"
     }
   ],
   "endpointTypes": [
     {
-      "id": 1,
+      "id": 60,
       "name": "MA-rootdevice",
       "deviceTypeRef": {
+        "id": 177,
         "code": 22,
         "profileId": 259,
         "label": "MA-rootdevice",
@@ -44,11 +44,15 @@
       },
       "deviceTypes": [
         {
+          "id": 177,
           "code": 22,
           "profileId": 259,
           "label": "MA-rootdevice",
           "name": "MA-rootdevice"
         }
+      ],
+      "deviceTypeRefs": [
+        177
       ],
       "deviceVersions": [
         1
@@ -73,8 +77,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -239,8 +243,50 @@
           "code": 30,
           "mfgCode": null,
           "define": "BINDING_CLUSTER",
+          "side": "client",
+          "enabled": 0,
+          "attributes": [
+            {
+              "name": "FeatureMap",
+              "code": 65532,
+              "mfgCode": null,
+              "side": "client",
+              "type": "bitmap32",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "ClusterRevision",
+              "code": 65533,
+              "mfgCode": null,
+              "side": "client",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "1",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            }
+          ]
+        },
+        {
+          "name": "Binding",
+          "code": 30,
+          "mfgCode": null,
+          "define": "BINDING_CLUSTER",
           "side": "server",
-          "enabled": 1,
+          "enabled": 0,
           "attributes": [
             {
               "name": "Binding",
@@ -250,6 +296,70 @@
               "type": "array",
               "included": 1,
               "storageOption": "External",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "GeneratedCommandList",
+              "code": 65528,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AcceptedCommandList",
+              "code": 65529,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "EventList",
+              "code": 65530,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AttributeList",
+              "code": 65531,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
               "singleton": 0,
               "bounded": 0,
               "defaultValue": "",
@@ -828,40 +938,40 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "QueryImageResponse",
               "code": 1,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ApplyUpdateRequest",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ApplyUpdateResponse",
               "code": 3,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "NotifyUpdateApplied",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -896,8 +1006,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -938,7 +1048,7 @@
               "code": 2,
               "mfgCode": null,
               "side": "server",
-              "type": "UpdateStateEnum",
+              "type": "OTAUpdateStateEnum",
               "included": 1,
               "storageOption": "RAM",
               "singleton": 0,
@@ -1257,48 +1367,48 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ArmFailSafeResponse",
               "code": 1,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "SetRegulatoryConfig",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "SetRegulatoryConfigResponse",
               "code": 3,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CommissioningComplete",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CommissioningCompleteResponse",
               "code": 5,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -1429,72 +1539,72 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ScanNetworksResponse",
               "code": 1,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddOrUpdateWiFiNetwork",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddOrUpdateThreadNetwork",
               "code": 3,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RemoveNetwork",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "NetworkConfigResponse",
               "code": 5,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ConnectNetwork",
               "code": 6,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ConnectNetworkResponse",
               "code": 7,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ReorderNetwork",
               "code": 8,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -1673,8 +1783,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -1725,8 +1835,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -2036,8 +2146,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -3096,8 +3206,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -3565,24 +3675,24 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "OpenBasicCommissioningWindow",
               "code": 1,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RevokeCommissioning",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -3623,7 +3733,7 @@
               "code": 2,
               "mfgCode": null,
               "side": "server",
-              "type": "vendor_id",
+              "type": "int16u",
               "included": 1,
               "storageOption": "External",
               "singleton": 0,
@@ -3681,96 +3791,96 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AttestationResponse",
               "code": 1,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CertificateChainRequest",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CertificateChainResponse",
               "code": 3,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CSRRequest",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "CSRResponse",
               "code": 5,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddNOC",
               "code": 6,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "UpdateNOC",
               "code": 7,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "NOCResponse",
               "code": 8,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "UpdateFabricLabel",
               "code": 9,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RemoveFabric",
               "code": 10,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddTrustedRootCertificate",
               "code": 11,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -3917,48 +4027,48 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "KeySetRead",
               "code": 1,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "KeySetReadResponse",
               "code": 2,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "KeySetRemove",
               "code": 3,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "KeySetReadAllIndices",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "KeySetReadAllIndicesResponse",
               "code": 5,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -4179,9 +4289,10 @@
       ]
     },
     {
-      "id": 2,
+      "id": 61,
       "name": "MA-thermostat",
       "deviceTypeRef": {
+        "id": 209,
         "code": 769,
         "profileId": 259,
         "label": "MA-thermostat",
@@ -4189,11 +4300,15 @@
       },
       "deviceTypes": [
         {
+          "id": 209,
           "code": 769,
           "profileId": 259,
           "label": "MA-thermostat",
           "name": "MA-thermostat"
         }
+      ],
+      "deviceTypeRefs": [
+        209
       ],
       "deviceVersions": [
         1
@@ -4218,8 +4333,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -4254,16 +4369,16 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "TriggerEffect",
               "code": 64,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -4346,80 +4461,80 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddGroupResponse",
               "code": 0,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ViewGroup",
               "code": 1,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "ViewGroupResponse",
               "code": 1,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "GetGroupMembership",
               "code": 2,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "GetGroupMembershipResponse",
               "code": 2,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RemoveGroup",
               "code": 3,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RemoveGroupResponse",
               "code": 3,
               "mfgCode": null,
               "source": "server",
-              "isIncoming": 0,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "RemoveAllGroups",
               "code": 4,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             },
             {
               "name": "AddGroupIfIdentifying",
               "code": 5,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [
@@ -4469,6 +4584,260 @@
               "reportable": 1,
               "minInterval": 0,
               "maxInterval": 65344,
+              "reportableChange": 0
+            }
+          ]
+        },
+        {
+          "name": "On/Off",
+          "code": 6,
+          "mfgCode": null,
+          "define": "ON_OFF_CLUSTER",
+          "side": "client",
+          "enabled": 1,
+          "commands": [
+            {
+              "name": "Off",
+              "code": 0,
+              "mfgCode": null,
+              "source": "client",
+              "incoming": 0,
+              "outgoing": 1
+            },
+            {
+              "name": "On",
+              "code": 1,
+              "mfgCode": null,
+              "source": "client",
+              "incoming": 0,
+              "outgoing": 1
+            },
+            {
+              "name": "Toggle",
+              "code": 2,
+              "mfgCode": null,
+              "source": "client",
+              "incoming": 0,
+              "outgoing": 1
+            }
+          ],
+          "attributes": [
+            {
+              "name": "FeatureMap",
+              "code": 65532,
+              "mfgCode": null,
+              "side": "client",
+              "type": "bitmap32",
+              "included": 0,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "ClusterRevision",
+              "code": 65533,
+              "mfgCode": null,
+              "side": "client",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "5",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            }
+          ]
+        },
+        {
+          "name": "On/Off",
+          "code": 6,
+          "mfgCode": null,
+          "define": "ON_OFF_CLUSTER",
+          "side": "server",
+          "enabled": 0,
+          "attributes": [
+            {
+              "name": "OnOff",
+              "code": 0,
+              "mfgCode": null,
+              "side": "server",
+              "type": "boolean",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "GlobalSceneControl",
+              "code": 16384,
+              "mfgCode": null,
+              "side": "server",
+              "type": "boolean",
+              "included": 0,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "1",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "OnTime",
+              "code": 16385,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int16u",
+              "included": 0,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "OffWaitTime",
+              "code": 16386,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int16u",
+              "included": 0,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "StartUpOnOff",
+              "code": 16387,
+              "mfgCode": null,
+              "side": "server",
+              "type": "OnOffStartUpOnOff",
+              "included": 0,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "GeneratedCommandList",
+              "code": 65528,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AcceptedCommandList",
+              "code": 65529,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "EventList",
+              "code": 65530,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AttributeList",
+              "code": 65531,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "FeatureMap",
+              "code": 65532,
+              "mfgCode": null,
+              "side": "server",
+              "type": "bitmap32",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "ClusterRevision",
+              "code": 65533,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "5",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
               "reportableChange": 0
             }
           ]
@@ -4580,6 +4949,170 @@
           ]
         },
         {
+          "name": "Binding",
+          "code": 30,
+          "mfgCode": null,
+          "define": "BINDING_CLUSTER",
+          "side": "client",
+          "enabled": 0,
+          "attributes": [
+            {
+              "name": "FeatureMap",
+              "code": 65532,
+              "mfgCode": null,
+              "side": "client",
+              "type": "bitmap32",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "ClusterRevision",
+              "code": 65533,
+              "mfgCode": null,
+              "side": "client",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "1",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            }
+          ]
+        },
+        {
+          "name": "Binding",
+          "code": 30,
+          "mfgCode": null,
+          "define": "BINDING_CLUSTER",
+          "side": "server",
+          "enabled": 1,
+          "attributes": [
+            {
+              "name": "Binding",
+              "code": 0,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "GeneratedCommandList",
+              "code": 65528,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AcceptedCommandList",
+              "code": 65529,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "EventList",
+              "code": 65530,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "AttributeList",
+              "code": 65531,
+              "mfgCode": null,
+              "side": "server",
+              "type": "array",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "FeatureMap",
+              "code": 65532,
+              "mfgCode": null,
+              "side": "server",
+              "type": "bitmap32",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "ClusterRevision",
+              "code": 65533,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "1",
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            }
+          ]
+        },
+        {
           "name": "Thermostat",
           "code": 513,
           "mfgCode": null,
@@ -4592,8 +5125,8 @@
               "code": 0,
               "mfgCode": null,
               "source": "client",
-              "isIncoming": 1,
-              "isEnabled": 1
+              "incoming": null,
+              "outgoing": null
             }
           ],
           "attributes": [

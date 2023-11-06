@@ -78,6 +78,7 @@ target_sources(app PRIVATE
                src/SensorManager.cpp
                src/TemperatureManager.cpp
                src/ZclCallbacks.cpp
+               src/binding-handler.cpp
                ${TELINK_COMMON}/common/src/mainCommon.cpp
                ${TELINK_COMMON}/common/src/AppTaskCommon.cpp
                ${TELINK_COMMON}/util/src/LEDWidget.cpp

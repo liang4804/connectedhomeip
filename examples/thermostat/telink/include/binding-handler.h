@@ -1,7 +1,6 @@
 /*
  *
- *    Copyright (c) 2022 Project CHIP Authors
- *    All rights reserved.
+ *    Copyright (c) 2020 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,14 +14,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 #pragma once
 
-// ---- Thermostat Example App Config ----
+#include "app-common/zap-generated/ids/Clusters.h"
+#include "app-common/zap-generated/ids/Commands.h"
+#include "lib/core/CHIPError.h"
 
-#define APP_USE_EXAMPLE_START_BUTTON 1
-#define APP_USE_BLE_START_BUTTON 0
-#define APP_USE_THREAD_START_BUTTON 0
-#define APP_SET_DEVICE_INFO_PROVIDER 1
-#define APP_SET_NETWORK_COMM_ENDPOINT_SEC 0
-#define APP_USE_IDENTIFY_PWM 1
+CHIP_ERROR InitBindingHandler();
+bool IsGroupBound();
+void SwitchWorkerFunction(intptr_t context);
+void BindingWorkerFunction(intptr_t context);
+
+struct BindingCommandData
+{
+    chip::EndpointId localEndpointId = 1;
+    chip::CommandId commandId;
+    chip::ClusterId clusterId;
+    bool isGroup = false;
+};

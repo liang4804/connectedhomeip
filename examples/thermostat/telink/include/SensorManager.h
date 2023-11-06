@@ -25,12 +25,14 @@
 
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <lib/core/CHIPError.h>
+#include <app-common/zap-generated/cluster-objects.h>
+#include <app-common/zap-generated/cluster-enums.h>
 
 class SensorManager
 {
 public:
     CHIP_ERROR Init();
-
+    bool SwitchSystemModeIsHeatOrNot(void);
 private:
     friend SensorManager & SensorMgr();
 

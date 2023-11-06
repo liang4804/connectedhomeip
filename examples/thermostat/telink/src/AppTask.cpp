@@ -17,13 +17,14 @@
  */
 
 #include "AppTask.h"
-
+#include "binding-handler.h"
 LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
 
 AppTask AppTask::sAppTask;
 
 CHIP_ERROR AppTask::Init(void)
 {
+    SetExampleButtonCallbacks(SwitchActionEventHandler);
     InitCommonParts();
 
     CHIP_ERROR err = SensorMgr().Init();
@@ -39,6 +40,16 @@ CHIP_ERROR AppTask::Init(void)
         return err;
     }
 
+
+
+
+    err = InitBindingHandler();
+    if (err != CHIP_NO_ERROR)
+    {
+        LOG_ERR("InitBindingHandler fail");
+        return err;
+    }
+
     return CHIP_NO_ERROR;
 }
 
@@ -47,5 +58,32 @@ void AppTask::UpdateThermoStatUI(void)
     LOG_INF("Thermostat Status - M:%d T:%d'C H:%d'C C:%d'C", TempMgr().GetMode(), TempMgr().GetCurrentTemp(),
             TempMgr().GetHeatingSetPoint(), TempMgr().GetCoolingSetPoint());
 }
+
+
+void AppTask::SwitchActionEventHandler(AppEvent * aEvent)
+{
+    LOG_ERR("Thermostat Status %x",aEvent->Type);
+
+    bool ret = SensorMgr().SwitchSystemModeIsHeatOrNot();
+    BindingCommandData * data = chip::Platform::New<BindingCommandData>();
+
+    if (ret == true)
+    {
+        
+        data->commandId           = chip::app::Clusters::OnOff::Commands::On::Id;
+        data->clusterId           = chip::app::Clusters::OnOff::Id;
+        PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
+    }
+    else
+    {
+        data->commandId           = chip::app::Clusters::OnOff::Commands::Off::Id;
+        data->clusterId           = chip::app::Clusters::OnOff::Id;
+
+    }
+        PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));    
+}
+
+
+
 
 void AppTask::UpdateClusterState() {}

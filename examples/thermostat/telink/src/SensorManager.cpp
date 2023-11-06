@@ -24,7 +24,7 @@ LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
 
 using namespace chip;
 using namespace ::chip::DeviceLayer;
-
+using namespace chip::app::Clusters::Thermostat;
 constexpr EndpointId kThermostatEndpoint = 1;
 constexpr uint16_t kSensorTimerPeriodMs  = 30000; // 30s timer period
 constexpr uint16_t kMinTemperatureDelta  = 50;    // 0.5 degree Celsius
@@ -88,3 +88,31 @@ void SensorManager::SensorTimerEventHandler(AppEvent * aEvent)
     // Start next timer to handle temp sensor.
     k_timer_start(&sSensorTimer, K_MSEC(kSensorTimerPeriodMs), K_NO_WAIT);
 }
+
+
+bool SensorManager::SwitchSystemModeIsHeatOrNot(void)
+{
+    uint8_t sMode = 0, ret = false;
+    app::Clusters::Thermostat::Attributes::SystemMode::Get(kThermostatEndpoint,&sMode);
+    // LOG_INF("system mode : %x", sMode);
+    if(sMode==static_cast<uint8_t>(chip::app::Clusters::Thermostat::ThermostatSystemMode::kCool))
+    {
+        sMode = static_cast<uint8_t>(chip::app::Clusters::Thermostat::ThermostatSystemMode::kHeat);
+        LOG_INF("system mode : kHeat (%x)", sMode);
+        app::Clusters::Thermostat::Attributes::SystemMode::Set(kThermostatEndpoint,sMode);
+        ret = true;
+    }
+    else 
+    {
+        sMode = static_cast<uint8_t>(chip::app::Clusters::Thermostat::ThermostatSystemMode::kCool);     
+        LOG_INF("system mode : kCool (%x)", sMode);
+        app::Clusters::Thermostat::Attributes::SystemMode::Set(kThermostatEndpoint,sMode);
+    }
+
+    return ret;
+}
+
+
+
+    // kCool = 3;
+    // kHeat = 4;
