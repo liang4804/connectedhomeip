@@ -1,0 +1,21 @@
+{
+    "serial_num": "11410100202309060010",
+    "vendor_id": "0x1141",
+    "product_id": "0x8002",
+    "hw_ver": 1,
+    "version": 1,
+    "discriminator": "2800",
+    "spake2_it": 1000,
+    "passcode": "94013927",
+    "spake2_salt": "mi/sNZz2vNuj1fsftIi0rb0z4G4htekFzcJcULnWOOs=",
+    "spake2_verifier": "drUt02+nHV0mfHxh+TmS7hvyMNtKyPwiihY2SiQetyUE+3CNZlsvVq5I9GpOQ6uiT7gFyXlO2WFClPbKtGgw9Y+UC1Odrqg9wZuyl8bUiRstvQ+1DVTDLnbrYZyJaK9evA==",
+    "qrcode": "MT:0OSJ042C0003PN0J.10",
+    "manualcode": "23530357380",
+    "cert_pem": "../../../credentials/Telink-PAA-TestNet/Telink-Matter-Development-PAI-01-Cert.pem",
+    "cert_der": "/home/test/matter/code/connectedhomeip/scripts/tools/telink/out/1141_8002/11410100202309060010/internal/pai_cert.der",
+    "key_pem": "../../../credentials/Telink-PAA-TestNet/Telink-Matter-Development-PAI-01-Key.pem",
+    "dac_cert": "/home/test/matter/code/connectedhomeip/scripts/tools/telink/out/1141_8002/11410100202309060010/internal/DAC_cert.der",
+    "dac_priv_key": "/home/test/matter/code/connectedhomeip/scripts/tools/telink/out/1141_8002/11410100202309060010/internal/DAC_private_key.bin",
+    "dac_pub_key": "/home/test/matter/code/connectedhomeip/scripts/tools/telink/out/1141_8002/11410100202309060010/internal/DAC_public_key.bin",
+    "cert_dclrn": "../../../src/tools/chip-cert/out/telink_fan.der"
+}

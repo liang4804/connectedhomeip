@@ -180,8 +180,12 @@ CHIP_ERROR BLEManagerImpl::_Init(void)
 
 void BLEManagerImpl::_Shutdown()
 {
-    bt_disable();
-    mBLERadioInitialized = false;
+    // bt_disable();
+    // mBLERadioInitialized = false;
+    if (mBLERadioInitialized) {
+        bt_disable();
+        mBLERadioInitialized = false;
+    }
 }
 
 void BLEManagerImpl::DriveBLEState(intptr_t arg)

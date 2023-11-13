@@ -1,0 +1,736 @@
+diff --git a/examples/lock-app/telink/include/AppTask.h b/examples/lock-app/telink/include/AppTask.h
+index c63643ca89..3e3c1a079e 100644
+--- a/examples/lock-app/telink/include/AppTask.h
++++ b/examples/lock-app/telink/include/AppTask.h
+@@ -42,3 +42,4 @@ inline AppTask & GetAppTask(void)
+ {
+     return AppTask::sAppTask;
+ }
++CHIP_ERROR InitDoorLockHandler();
+\ No newline at end of file
+diff --git a/examples/lock-app/telink/include/BoltLockManager.h b/examples/lock-app/telink/include/BoltLockManager.h
+index 28176c9efe..e0e4a85fb9 100644
+--- a/examples/lock-app/telink/include/BoltLockManager.h
++++ b/examples/lock-app/telink/include/BoltLockManager.h
+@@ -1,21 +1,3 @@
+-/*
+- *
+- *    Copyright (c) 2023 Project CHIP Authors
+- *    All rights reserved.
+- *
+- *    Licensed under the Apache License, Version 2.0 (the "License");
+- *    you may not use this file except in compliance with the License.
+- *    You may obtain a copy of the License at
+- *
+- *        http://www.apache.org/licenses/LICENSE-2.0
+- *
+- *    Unless required by applicable law or agreed to in writing, software
+- *    distributed under the License is distributed on an "AS IS" BASIS,
+- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- *    See the License for the specific language governing permissions and
+- *    limitations under the License.
+- */
+-
+ #pragma once
+ 
+ #include <app/clusters/door-lock-server/door-lock-server.h>
+@@ -25,28 +7,18 @@
+ #include <zephyr/kernel.h>
+ 
+ #include <cstdint>
+-#include <vector>
+ 
+-// Maximum number of credentials per user supported by lock
+ #define CONFIG_LOCK_NUM_CREDENTIALS_PER_USER (2)
+ // Maximum number of users supported by lock
+ #define CONFIG_LOCK_NUM_USERS (5)
+ // Maximum number of credentials supported by lock
+ #define CONFIG_LOCK_NUM_CREDENTIALS (10)
+ 
+-struct LockCredentialInfo;
+-
+-#define CONFIG_LOCK_CREDENTIAL_INFO_MAX_DATA_SIZE (20)
+-#define CONFIG_LOCK_CREDENTIAL_INFO_MAX_TYPES (6)
+-
+ class AppEvent;
+ 
+ class BoltLockManager
+ {
+ public:
+-    BoltLockManager() :
+-        mCredentials(CONFIG_LOCK_CREDENTIAL_INFO_MAX_TYPES, std::vector<LockCredentialInfo>(CONFIG_LOCK_NUM_CREDENTIALS + 1))
+-    {}
+     static constexpr size_t kMaxCredentialLength = 128;
+ 
+     enum class State : uint8_t
+@@ -86,8 +58,7 @@ public:
+     bool GetCredential(uint16_t credentialIndex, CredentialTypeEnum credentialType,
+                        EmberAfPluginDoorLockCredentialInfo & credential) const;
+     bool SetCredential(uint16_t credentialIndex, chip::FabricIndex creator, chip::FabricIndex modifier,
+-                       DlCredentialStatus credentialStatus, CredentialTypeEnum credentialType,
+-                       const chip::ByteSpan & credentialData);
++                       DlCredentialStatus credentialStatus, CredentialTypeEnum credentialType, const chip::ByteSpan & secret);
+ 
+     bool ValidatePIN(const Optional<chip::ByteSpan> & pinCode, OperationErrorEnum & err) const;
+ 
+@@ -109,16 +80,8 @@ private:
+     UserData mUserData[CONFIG_LOCK_NUM_USERS];
+     EmberAfPluginDoorLockUserInfo mUsers[CONFIG_LOCK_NUM_USERS] = {};
+ 
+-    struct LockCredentialInfo
+-    {
+-        DlCredentialStatus status;
+-        CredentialTypeEnum credentialType;
+-        chip::FabricIndex createdBy;
+-        chip::FabricIndex modifiedBy;
+-        uint8_t credentialData[CONFIG_LOCK_CREDENTIAL_INFO_MAX_TYPES];
+-        size_t credentialDataSize;
+-    };
+-    std::vector<std::vector<LockCredentialInfo>> mCredentials;
++    CredentialData mCredentialData[CONFIG_LOCK_NUM_CREDENTIALS];
++    EmberAfPluginDoorLockCredentialInfo mCredentials[CONFIG_LOCK_NUM_CREDENTIALS] = {};
+ 
+     static BoltLockManager sLock;
+ };
+diff --git a/examples/lock-app/telink/prj.conf b/examples/lock-app/telink/prj.conf
+index 7b160ed725..1eeefa1294 100755
+--- a/examples/lock-app/telink/prj.conf
++++ b/examples/lock-app/telink/prj.conf
+@@ -39,19 +39,28 @@ CONFIG_CHIP_DEVICE_PRODUCT_ID=32774
+ CONFIG_BT_DEVICE_NAME="TelinkLock"
+ 
+ # Disable Matter OTA DFU
+-CONFIG_CHIP_OTA_REQUESTOR=n
++CONFIG_CHIP_OTA_REQUESTOR=y
+ CONFIG_CHIP_DEVICE_SOFTWARE_VERSION=1
+ 
+ # Enable CHIP pairing automatically on application start.
+ CONFIG_CHIP_ENABLE_PAIRING_AUTOSTART=y
+ 
+ # Disable CHIP shell support
+-CONFIG_CHIP_LIB_SHELL=n
++CONFIG_CHIP_LIB_SHELL=y
+ 
+ # Disable factory data support
+-CONFIG_CHIP_FACTORY_DATA=n
++CONFIG_CHIP_FACTORY_DATA=y
+ CONFIG_CHIP_FACTORY_DATA_BUILD=n
+ CONFIG_CHIP_FACTORY_DATA_MERGE_WITH_FIRMWARE=n
++CONFIG_CHIP_CERTIFICATION_DECLARATION_STORAGE=y
+ 
++# OpenThread configs
++# CONFIG_OPENTHREAD_MTD=y
++# CONFIG_OPENTHREAD_FTD=n
++# CONFIG_OPENTHREAD_MTD_SED=y
++# CONFIG_OPENTHREAD_
++# CONFIG_CHIP_ENABLE_SLEEPY_END_DEVICE_SUPPORT=y
++# CONFIG_CHIP_THREAD_SSED=n
++CONFIG_CHIP_THREAD_DEVICE_ROLE_SLEEPY_END_DEVICE=y
+ # Enable Power Management
+-CONFIG_PM=y
++CONFIG_PM=n
+diff --git a/examples/lock-app/telink/src/AppTask.cpp b/examples/lock-app/telink/src/AppTask.cpp
+index bf7fc3311c..4108f3ce42 100644
+--- a/examples/lock-app/telink/src/AppTask.cpp
++++ b/examples/lock-app/telink/src/AppTask.cpp
+@@ -18,9 +18,10 @@
+ 
+ #include "AppTask.h"
+ #include "BoltLockManager.h"
+-
++#include <app/server/Server.h>
++#include <credentials/FabricTable.h>
+ #include <app-common/zap-generated/attributes/Accessors.h>
+-
++#include <app/data-model/Nullable.h>
+ LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
+ 
+ using namespace ::chip::app::Clusters::DoorLock;
+@@ -31,6 +32,25 @@ LEDWidget sLockLED;
+ #endif
+ } // namespace
+ 
++#if defined(CONFIG_CHIP_LIB_SHELL)
++#include "lib/shell/Engine.h"
++#include "lib/shell/commands/Help.h"
++#endif // CONFIG_CHIP_LIB_SHELL
++
++
++#if defined(CONFIG_CHIP_LIB_SHELL)
++using Shell::Engine;
++using Shell::shell_command_t;
++using Shell::streamer_get;
++using Shell::streamer_printf;
++using chip::app::DataModel::MakeNullable;
++using ::chip::app::DataModel::Nullable;
++using chip::app::DataModel::NullNullable;
++Engine sShellDoorLockEvents;
++Engine sShellDoorLockSubEvents;
++#endif // defined(CONFIG_CHIP_LIB_SHELL)
++
++
+ AppTask AppTask::sAppTask;
+ 
+ CHIP_ERROR AppTask::Init(void)
+@@ -50,6 +70,15 @@ CHIP_ERROR AppTask::Init(void)
+     // Disable auto-relock time feature.
+     DoorLockServer::Instance().SetAutoRelockTime(kExampleEndpointId, 0);
+ 
++    CHIP_ERROR err = ConnectivityMgr().SetBLEDeviceName("Telink Lock");
++    if (err != CHIP_NO_ERROR)
++    {
++        LOG_ERR("SetBLEDeviceName fail");
++        return err;
++    }
++
++    InitDoorLockHandler();
++
+     return CHIP_NO_ERROR;
+ }
+ 
+@@ -136,3 +165,350 @@ void AppTask::UpdateClusterState(BoltLockManager::State state, BoltLockManager::
+         }
+     });
+ }
++
++
++
++#ifdef CONFIG_CHIP_LIB_SHELL
++
++/********************************************************
++ * Switch shell functions
++ *********************************************************/
++
++CHIP_ERROR LockHelpHandler(int argc, char ** argv)
++{
++    sShellDoorLockEvents.ForEachCommand(Shell::PrintCommandHelp, nullptr);
++    return CHIP_NO_ERROR;
++}
++
++CHIP_ERROR DoorLockEventsHandler(int argc, char ** argv)
++{
++    if (argc == 0)
++    {
++        return LockHelpHandler(argc, argv);
++    }
++
++    return sShellDoorLockEvents.ExecCommand(argc, argv);
++}
++
++/********************************************************
++ * OnOff switch shell functions
++ *********************************************************/
++
++CHIP_ERROR DoorLockHelpHandler(int argc, char ** argv)
++{
++    sShellDoorLockSubEvents.ForEachCommand(Shell::PrintCommandHelp, nullptr);
++    return CHIP_NO_ERROR;
++}
++
++
++CHIP_ERROR DoorLockLockCommandHandler(int argc, char ** argv)
++{
++    if (argc == 0)
++    {
++        return DoorLockHelpHandler(argc, argv);
++    }
++
++    return sShellDoorLockSubEvents.ExecCommand(argc, argv);
++}
++
++
++CHIP_ERROR AlarmReadEventHandler(int argc, char ** argv)
++{
++     DoorLockServer::Instance().SendLockAlarmEvent(1, AlarmCodeEnum::kLockJammed);
++    return CHIP_NO_ERROR;
++}
++
++CHIP_ERROR StateChangeReadEventHandler(int argc, char ** argv)
++{
++     DoorLockServer::Instance().SetDoorState(1, DoorStateEnum::kDoorClosed);
++    return CHIP_NO_ERROR;
++}
++
++
++/**
++    //  * @brief Send LockOperation event if opSuccess is true, otherwise send LockOperationError with given opErr code
++    //  *
++    //  * @param endpointId    endpoint where DoorLockServer is running
++    //  * @param opType        lock operation type (lock, unlock, etc)
++    //  * @param opSource      operation source (remote, keypad, auto, etc)
++    //  * @param opErr         operation error code (if opSuccess == false)
++    //  * @param userId        user id
++    //  * @param fabricIdx     fabric index responsible for operating the lock
++    //  * @param nodeId        node id responsible for operating the lock
++    //  * @param credList      list of credentials used in lock operation (can be NULL if no credentials were used)
++    //  * @param credListSize  size of credentials list (if 0, then no credentials were used)
++    //  * @param opSuccess     flags if operation was successful or not
++    //  */
++    // void SendLockOperationEvent(chip::EndpointId endpointId, LockOperationTypeEnum opType, OperationSourceEnum opSource,
++    //                             OperationErrorEnum opErr, const Nullable<uint16_t> & userId,
++    //                             const Nullable<chip::FabricIndex> & fabricIdx, const Nullable<chip::NodeId> & nodeId,
++    //                             const Nullable<List<const LockOpCredentials>> & credentials = NullNullable, bool opSuccess = true);
++
++
++CHIP_ERROR OperationReadEventHandler(int argc, char ** argv)
++{
++    // ChipLogError(Zcl, "$$$$$$$$$$OperationReadEventHandler");
++    // LockOpCredentials currentCredential;
++    // if (emberAfPluginDoorLockGetCredential(1, 2, CredentialTypeEnum::kRfid, currentCredential))
++    // {
++    //     ChipLogError(Zcl, "$$$$$$$$$$OperationReadEventHandler OK");
++    // }
++
++    // NodeId nodeid= 1;
++
++
++    // for (const auto & fabricInfo : : chip::Server::GetInstance().GetFabricTable())
++    // {
++    //     FabricIndex fabricIndex =  MakeNullable(fabricInfo.GetFabricIndex());
++
++    // DoorLockServer::Instance().SendLockOperationEvent(1, LockOperationTypeEnum::kLock, OperationSourceEnum::kRemote, OperationErrorEnum::kUnspecified, chip::app::DataModel::MakeNullable(static_cast<uint16_t>(1)), lift, lift1,
++    //                        currentCredential, true);
++    // }
++
++    // for (const auto & fb : chip::Server::GetInstance().GetFabricTable())
++    // {
++    //     FabricIndex fabricIndex = fb.GetFabricIndex();
++    //     NodeId myNodeId = fb.GetNodeId();
++        // ChipLogProgress(NotSpecified,
++        //                 "---- Current Fabric nodeId=0x" ChipLogFormatX64 " fabricId=0x" ChipLogFormatX64 " fabricIndex=%d",
++        //                 ChipLogValueX64(myNodeId), ChipLogValueX64(fb.GetFabricId()), fabricIndex);
++        // DoorLockServer::Instance().SendLockOperationEvent(1, LockOperationTypeEnum::kLock, OperationSourceEnum::kRemote, OperationErrorEnum::kUnspecified, NullNullable, NullNullable, NullNullable,
++        //                    NullNullable);
++        DoorLockServer::Instance().SetLockState(1, DlLockState::kLocked);
++    // }
++
++    return CHIP_NO_ERROR;
++}
++
++
++// CHIP_ERROR OnOffSwitchCommandHandler(int argc, char ** argv)
++// {
++//     if (argc == 0)
++//     {
++//         return OnOffHelpHandler(argc, argv);
++//     }
++
++//     return sShellSwitchOnOffSubCommands.ExecCommand(argc, argv);
++// }
++
++// CHIP_ERROR OnSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::On::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR OffSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::Off::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR ToggleSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::Toggle::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++// /********************************************************
++//  * bind switch shell functions
++//  *********************************************************/
++
++// CHIP_ERROR BindingHelpHandler(int argc, char ** argv)
++// {
++//     sShellSwitchBindingSubCommands.ForEachCommand(Shell::PrintCommandHelp, nullptr);
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR BindingSwitchCommandHandler(int argc, char ** argv)
++// {
++//     if (argc == 0)
++//     {
++//         return BindingHelpHandler(argc, argv);
++//     }
++
++//     return sShellSwitchBindingSubCommands.ExecCommand(argc, argv);
++// }
++
++// CHIP_ERROR BindingGroupBindCommandHandler(int argc, char ** argv)
++// {
++//     VerifyOrReturnError(argc == 2, CHIP_ERROR_INVALID_ARGUMENT);
++
++//     EmberBindingTableEntry * entry = Platform::New<EmberBindingTableEntry>();
++//     entry->type                    = EMBER_MULTICAST_BINDING;
++//     entry->fabricIndex             = atoi(argv[0]);
++//     entry->groupId                 = atoi(argv[1]);
++//     entry->local                   = 1; // Hardcoded to endpoint 1 for now
++//     entry->clusterId.SetValue(6);       // Hardcoded to OnOff cluster for now
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(BindingWorkerFunction, reinterpret_cast<intptr_t>(entry));
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR BindingUnicastBindCommandHandler(int argc, char ** argv)
++// {
++//     VerifyOrReturnError(argc == 3, CHIP_ERROR_INVALID_ARGUMENT);
++
++//     EmberBindingTableEntry * entry = Platform::New<EmberBindingTableEntry>();
++//     entry->type                    = EMBER_UNICAST_BINDING;
++//     entry->fabricIndex             = atoi(argv[0]);
++//     entry->nodeId                  = atoi(argv[1]);
++//     entry->local                   = 1; // Hardcoded to endpoint 1 for now
++//     entry->remote                  = atoi(argv[2]);
++//     entry->clusterId.SetValue(6); // Hardcode to OnOff cluster for now
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(BindingWorkerFunction, reinterpret_cast<intptr_t>(entry));
++//     return CHIP_NO_ERROR;
++// }
++
++// /********************************************************
++//  * Groups switch shell functions
++//  *********************************************************/
++
++// CHIP_ERROR GroupsHelpHandler(int argc, char ** argv)
++// {
++//     sShellSwitchGroupsSubCommands.ForEachCommand(Shell::PrintCommandHelp, nullptr);
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR GroupsSwitchCommandHandler(int argc, char ** argv)
++// {
++//     if (argc == 0)
++//     {
++//         return GroupsHelpHandler(argc, argv);
++//     }
++
++//     return sShellSwitchGroupsSubCommands.ExecCommand(argc, argv);
++// }
++
++// /********************************************************
++//  * Groups OnOff switch shell functions
++//  *********************************************************/
++
++// CHIP_ERROR GroupsOnOffHelpHandler(int argc, char ** argv)
++// {
++//     sShellSwitchGroupsOnOffSubCommands.ForEachCommand(Shell::PrintCommandHelp, nullptr);
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR GroupsOnOffSwitchCommandHandler(int argc, char ** argv)
++// {
++//     if (argc == 0)
++//     {
++//         return GroupsOnOffHelpHandler(argc, argv);
++//     }
++
++//     return sShellSwitchGroupsOnOffSubCommands.ExecCommand(argc, argv);
++// }
++
++// CHIP_ERROR GroupOnSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::On::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++//     data->isGroup             = true;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR GroupOffSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::Off::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++//     data->isGroup             = true;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++// CHIP_ERROR GroupToggleSwitchCommandHandler(int argc, char ** argv)
++// {
++//     BindingCommandData * data = Platform::New<BindingCommandData>();
++//     data->commandId           = Clusters::OnOff::Commands::Toggle::Id;
++//     data->clusterId           = Clusters::OnOff::Id;
++//     data->isGroup             = true;
++
++//     DeviceLayer::PlatformMgr().ScheduleWork(SwitchWorkerFunction, reinterpret_cast<intptr_t>(data));
++//     return CHIP_NO_ERROR;
++// }
++
++/**
++ * @brief configures switch matter shell
++ *
++ */
++static void RegisterDoorLockCommands()
++{
++    static const shell_command_t sDoorLockSubCommands[] = {
++        { &LockHelpHandler, "help", "Usage: lock <subcommand>" },
++        { &DoorLockLockCommandHandler, "doorlock", " Usage: lock doorlock <subcommand>" },
++    };
++
++    static const shell_command_t sLockDoorLockSubCommands[] = {
++        { &DoorLockHelpHandler,"help", "Usage : lock doorlock <subcommand>" },
++        { &AlarmReadEventHandler,"DoorLockAlarm", " lock doorlock DoorLockAlarm"},
++        { &StateChangeReadEventHandler,"DoorStateChange", "lock doorlock DoorStateChange"},
++        { &OperationReadEventHandler,"LockOperation", "lock doorlock LockOperation" }
++        // { &OperationErrorReadEventHandler, "LockOperationError", "lock doorlock LockOperationError" },
++        // { &UserChangeReadEventHandler,"LockUserChange", "lock doorlock LockUserChange" }
++    };
++
++    // static const shell_command_t sSwitchGroupsSubCommands[] = { { &GroupsHelpHandler, "help", "Usage: switch groups <subcommand>" },
++    //                                                             { &GroupsOnOffSwitchCommandHandler, "onoff",
++    //                                                               "Usage: switch groups onoff <subcommand>" } };
++
++    // static const shell_command_t sSwitchGroupsOnOffSubCommands[] = {
++    //     { &GroupsOnOffHelpHandler, "help", "Usage: switch groups onoff <subcommand>" },
++    //     { &GroupOnSwitchCommandHandler, "on", "Sends on command to bound group" },
++    //     { &GroupOffSwitchCommandHandler, "off", "Sends off command to bound group" },
++    //     { &GroupToggleSwitchCommandHandler, "toggle", "Sends toggle command to group" }
++    // };
++
++    // static const shell_command_t sSwitchBindingSubCommands[] = {
++    //     { &BindingHelpHandler, "help", "Usage: switch binding <subcommand>" },
++    //     { &BindingGroupBindCommandHandler, "group", "Usage: switch binding group <fabric index> <group id>" },
++    //     { &BindingUnicastBindCommandHandler, "unicast", "Usage: switch binding group <fabric index> <node id> <endpoint>" }
++    // };
++
++    static const shell_command_t sLockCommand = { &DoorLockEventsHandler, "lock",
++                                                    "Door-Lock commands. Usage: lock <subcommand>" };
++
++    // sShellSwitchGroupsOnOffSubCommands.RegisterCommands(sSwitchGroupsOnOffSubCommands, ArraySize(sSwitchGroupsOnOffSubCommands));
++    // sShellSwitchOnOffSubCommands.RegisterCommands(sSwitchOnOffSubCommands, ArraySize(sSwitchOnOffSubCommands));
++    // sShellSwitchGroupsSubCommands.RegisterCommands(sSwitchGroupsSubCommands, ArraySize(sSwitchGroupsSubCommands));
++    sShellDoorLockSubEvents.RegisterCommands(sLockDoorLockSubCommands, ArraySize(sLockDoorLockSubCommands));
++    sShellDoorLockEvents.RegisterCommands(sDoorLockSubCommands, ArraySize(sDoorLockSubCommands));
++
++    Engine::Root().RegisterCommands(&sLockCommand, 1);
++}
++#endif // CONFIG_CHIP_LIB_SHELL
++
++
++
++
++
++
++
++
++CHIP_ERROR InitDoorLockHandler()
++{
++    // The initialization of binding manager will try establishing connection with unicast peers
++    // so it requires the Server instance to be correctly initialized. Post the init function to
++    // the event queue so that everything is ready when initialization is conducted.
++#if defined(CONFIG_CHIP_LIB_SHELL)
++    RegisterDoorLockCommands();
++#endif
++    return CHIP_NO_ERROR;
++}
+\ No newline at end of file
+diff --git a/examples/lock-app/telink/src/BoltLockManager.cpp b/examples/lock-app/telink/src/BoltLockManager.cpp
+index 721fb11e42..f332f96299 100644
+--- a/examples/lock-app/telink/src/BoltLockManager.cpp
++++ b/examples/lock-app/telink/src/BoltLockManager.cpp
+@@ -1,6 +1,7 @@
+ /*
+  *
+- *    Copyright (c) 2023 Project CHIP Authors
++ *    Copyright (c) 2020 Project CHIP Authors
++ *    Copyright (c) 2019 Google LLC.
+  *    All rights reserved.
+  *
+  *    Licensed under the Apache License, Version 2.0 (the "License");
+@@ -19,12 +20,10 @@
+ #include "BoltLockManager.h"
+ 
+ #include "AppConfig.h"
+-#include "AppEventCommon.h"
++// #include "AppEvent.h"
+ #include "AppTask.h"
+-#include <cstring>
+ 
+ using namespace chip;
+-using chip::to_underlying;
+ 
+ BoltLockManager BoltLockManager::sLock;
+ 
+@@ -81,88 +80,40 @@ bool BoltLockManager::SetUser(uint16_t userIndex, FabricIndex creator, FabricInd
+ bool BoltLockManager::GetCredential(uint16_t credentialIndex, CredentialTypeEnum credentialType,
+                                     EmberAfPluginDoorLockCredentialInfo & credential) const
+ {
+-    ChipLogProgress(Zcl, "Lock App: LockEndpoint::GetCredential [credentialIndex=%u,credentialType=%u]", credentialIndex,
+-                    to_underlying(credentialType));
++    VerifyOrReturnError(credentialIndex > 0 && credentialIndex <= CONFIG_LOCK_NUM_CREDENTIALS, false);
+ 
+-    if (to_underlying(credentialType) >= mCredentials.size())
+-    {
+-        ChipLogError(Zcl, "Cannot get the credential - index out of range [index=%d]", credentialIndex);
+-        return false;
+-    }
+-
+-    if (credentialIndex >= mCredentials.at(to_underlying(credentialType)).size() ||
+-        (0 == credentialIndex && CredentialTypeEnum::kProgrammingPIN != credentialType))
+-    {
+-        ChipLogError(Zcl, "Cannot get the credential - index out of range [index=%d]", credentialIndex);
+-        return false;
+-    }
+-
+-    const auto & credentialInStorage = mCredentials[to_underlying(credentialType)][credentialIndex];
+-
+-    credential.status = credentialInStorage.status;
+-    if (DlCredentialStatus::kAvailable == credential.status)
+-    {
+-        ChipLogDetail(Zcl, "Found unoccupied credential [index=%u]", credentialIndex);
+-        return true;
+-    }
+-    credential.credentialType = credentialInStorage.credentialType;
+-    credential.credentialData = chip::ByteSpan(credentialInStorage.credentialData, credentialInStorage.credentialDataSize);
+-    // So far there's no way to actually create the credential outside the matter, so here we always set the creation/modification
+-    // source to Matter
+-    credential.creationSource     = DlAssetSource::kMatterIM;
+-    credential.createdBy          = credentialInStorage.createdBy;
+-    credential.modificationSource = DlAssetSource::kMatterIM;
+-    credential.lastModifiedBy     = credentialInStorage.modifiedBy;
++    credential = mCredentials[credentialIndex - 1];
+ 
+-    ChipLogDetail(Zcl, "Found occupied credential [index=%u,type=%u,dataSize=%u,createdBy=%u,modifiedBy=%u]", credentialIndex,
+-                  to_underlying(credential.credentialType), static_cast<unsigned int>(credential.credentialData.size()),
+-                  credential.createdBy, credential.lastModifiedBy);
++    ChipLogProgress(Zcl, "Getting lock credential %u: %s", static_cast<unsigned>(credentialIndex),
++                    credential.status == DlCredentialStatus::kAvailable ? "available" : "occupied");
+ 
+     return true;
+ }
+ 
+ bool BoltLockManager::SetCredential(uint16_t credentialIndex, FabricIndex creator, FabricIndex modifier,
+-                                    DlCredentialStatus credentialStatus, CredentialTypeEnum credentialType,
+-                                    const ByteSpan & credentialData)
++                                    DlCredentialStatus credentialStatus, CredentialTypeEnum credentialType, const ByteSpan & secret)
+ {
+-    ChipLogProgress(Zcl,
+-                    "Lock App: LockEndpoint::SetCredential "
+-                    "[credentialIndex=%u,credentialStatus=%u,credentialType=%u,credentialDataSize=%u,creator=%u,modifier=%u]",
+-                    credentialIndex, to_underlying(credentialStatus), to_underlying(credentialType),
+-                    static_cast<unsigned int>(credentialData.size()), creator, modifier);
++    VerifyOrReturnError(credentialIndex > 0 && credentialIndex <= CONFIG_LOCK_NUM_CREDENTIALS, false);
++    VerifyOrReturnError(secret.size() <= kMaxCredentialLength, false);
+ 
+-    if (to_underlying(credentialType) >= mCredentials.capacity())
+-    {
+-        ChipLogError(Zcl, "Cannot set the credential - type out of range [type=%d]", to_underlying(credentialType));
+-        return false;
+-    }
++    CredentialData & credentialData = mCredentialData[credentialIndex - 1];
++    auto & credential               = mCredentials[credentialIndex - 1];
+ 
+-    if (credentialIndex >= mCredentials.at(to_underlying(credentialType)).size() ||
+-        (0 == credentialIndex && CredentialTypeEnum::kProgrammingPIN != credentialType))
++    if (!secret.empty())
+     {
+-        ChipLogError(Zcl, "Cannot set the credential - index out of range [index=%d]", credentialIndex);
+-        return false;
++        memcpy(credentialData.mSecret.Alloc(secret.size()).Get(), secret.data(), secret.size());
+     }
+ 
+-    auto & credentialInStorage = mCredentials[to_underlying(credentialType)][credentialIndex];
+-    if (credentialData.size() > CONFIG_LOCK_CREDENTIAL_INFO_MAX_DATA_SIZE)
+-    {
+-        ChipLogError(Zcl,
+-                     "Cannot get the credential - data size exceeds limit "
+-                     "index=%d,dataSize=%u,maxDataSize=%u]",
+-                     credentialIndex, static_cast<unsigned int>(credentialData.size()),
+-                     static_cast<unsigned int>(CONFIG_LOCK_CREDENTIAL_INFO_MAX_DATA_SIZE));
+-        return false;
+-    }
+-    credentialInStorage.status         = credentialStatus;
+-    credentialInStorage.credentialType = credentialType;
+-    credentialInStorage.createdBy      = creator;
+-    credentialInStorage.modifiedBy     = modifier;
+-    std::memcpy(credentialInStorage.credentialData, credentialData.data(), credentialData.size());
+-    credentialInStorage.credentialDataSize = credentialData.size();
++    credential.status             = credentialStatus;
++    credential.credentialType     = credentialType;
++    credential.credentialData     = ByteSpan(credentialData.mSecret.Get(), secret.size());
++    credential.creationSource     = DlAssetSource::kMatterIM;
++    credential.createdBy          = creator;
++    credential.modificationSource = DlAssetSource::kMatterIM;
++    credential.lastModifiedBy     = modifier;
+ 
+-    ChipLogProgress(Zcl, "Successfully set the credential [index=%d,credentialType=%u,creator=%u,modifier=%u]", credentialIndex,
+-                    to_underlying(credentialType), credentialInStorage.createdBy, credentialInStorage.modifiedBy);
++    ChipLogProgress(Zcl, "Setting lock credential %u: %s", static_cast<unsigned>(credentialIndex),
++                    credential.status == DlCredentialStatus::kAvailable ? "available" : "occupied");
+ 
+     return true;
+ }
+@@ -175,19 +126,19 @@ bool BoltLockManager::ValidatePIN(const Optional<ByteSpan> & pinCode, OperationE
+         return true;
+     }
+ 
+-    // Find the credential so we can make sure it is not absent right away
+-    auto & pinCredentials = mCredentials[to_underlying(CredentialTypeEnum::kPin)];
+-    auto credential       = std::find_if(pinCredentials.begin(), pinCredentials.end(), [&pinCode](const LockCredentialInfo & c) {
+-        return (c.status != DlCredentialStatus::kAvailable) &&
+-            chip::ByteSpan{ c.credentialData, c.credentialDataSize }.data_equal(pinCode.Value());
+-    });
+-
+-    if (credential == pinCredentials.end())
++    // Check the PIN code
++    for (const auto & credential : mCredentials)
+     {
+-        ChipLogDetail(Zcl, "Lock App: specified PIN code was not found in the database");
+-
+-        err = OperationErrorEnum::kInvalidCredential;
+-        return false;
++        if (credential.status == DlCredentialStatus::kAvailable || credential.credentialType != CredentialTypeEnum::kPin)
++        {
++            continue;
++        }
++
++        if (credential.credentialData.data_equal(pinCode.Value()))
++        {
++            ChipLogDetail(Zcl, "Valid lock PIN code provided");
++            return true;
++        }
+     }
+ 
+     ChipLogDetail(Zcl, "Invalid lock PIN code provided");
+@@ -223,7 +174,7 @@ void BoltLockManager::ActuatorTimerEventHandler(k_timer * timer)
+     AppEvent event;
+     event.Type               = AppEvent::kEventType_Timer;
+     event.TimerEvent.Context = static_cast<BoltLockManager *>(k_timer_user_data_get(timer));
+-    event.Handler            = (EventHandler) BoltLockManager::ActuatorAppEventHandler;
++    event.Handler            = (EventHandler)BoltLockManager::ActuatorAppEventHandler;
+     GetAppTask().PostEvent(&event);
+ }
+ 
+diff --git a/examples/lock-app/telink/src/ZclCallbacks.cpp b/examples/lock-app/telink/src/ZclCallbacks.cpp
+index 327db43125..134a778bd2 100644
+--- a/examples/lock-app/telink/src/ZclCallbacks.cpp
++++ b/examples/lock-app/telink/src/ZclCallbacks.cpp
+@@ -132,3 +132,11 @@ void emberAfDoorLockClusterInitCallback(EndpointId endpoint)
+ 
+     GetAppTask().UpdateClusterState(BoltLockMgr().GetState(), BoltLockManager::OperationSource::kUnspecified);
+ }
++
++
++DlStatus emberAfPluginDoorLockSetSchedule(chip::EndpointId endpointId, uint8_t weekdayIndex, uint16_t userIndex,
++                                          DlScheduleStatus status, DaysMaskMap daysMask, uint8_t startHour, uint8_t startMinute,
++                                          uint8_t endHour, uint8_t endMinute)
++{
++    return DlStatus::kSuccess;
++}
+\ No newline at end of file
